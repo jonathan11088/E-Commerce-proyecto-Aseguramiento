@@ -61,7 +61,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         }
 
         if (user.isLocked) {
-            SessionStore.deleteAllForUser(token);
+            SessionStore.deleteAllForUser(user.id);
             res.status(401).json({ Error: "Your account is locked. Please contact support." });
             return;
         }

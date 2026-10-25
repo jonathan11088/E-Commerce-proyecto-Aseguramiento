@@ -9,6 +9,8 @@ export class ApiError extends Error {
         super(message);
         this.name = this.constructor.name;
         (this as any).statusCode = statusCode;
+        // El manejador global de app.ts lee err.status, por eso se expone tambien
+        (this as any).status = statusCode;
         // This line captures exactly where the error happened in your code
         Error.captureStackTrace(this, this.constructor);
     }

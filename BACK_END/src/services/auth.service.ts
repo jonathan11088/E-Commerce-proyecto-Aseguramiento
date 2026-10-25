@@ -1,16 +1,16 @@
-import strict from "node:assert/strict";
 import { AppDataSource } from "../config/data-source";
 import { User, UserRole } from "../entities/User";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import { SessionStore } from "../middleware/sessionStore";
-import { forgotPassword, resetPassword } from "../controllers/auth.controller";
 import { ResetCode } from "../entities/ResetCode";
-import { Code } from "typeorm";
 
 const SALT_ROUND = 12;
 const JWT_EXPIRES_IN = '7d';
 const RESET_CODE_EXPIRY_MINUTES = 10;
+// Hash bcrypt de referencia (costo 12) para comparar cuando el correo no existe.
+// Asi la respuesta tarda lo mismo y no revela que cuentas estan registradas (DEF-01 / DEF-09).
+const DUMMY_HASH = '$2b$12$xvGviOEWaL3r9tVsculjteQzIefnAb2GDnOwePwb5a7/fB.zYHXj6';
 
 /**
    * Registers a new customer account.
@@ -67,7 +67,7 @@ export const AuthService = {
         const userRepo = await AppDataSource.getRepository(User);
         const normalisedEmail = email.toLowerCase().trim();
         const user = await userRepo.findOne({ where: { email: normalisedEmail } });
-        const isMatch = await bcrypt.compare(password, user?.passwordHash!);
+        const isMatch = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
 
         if (!user || !isMatch) {
             const error: any = new Error("Invalid Credential");
@@ -196,7 +196,7 @@ export const AuthService = {
         user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUND);
 
         resetCode.used = true;
-        await userRepo.save(resetCode);
+        await resetRepo.save(resetCode);
         await userRepo.save(user);
 
         SessionStore.deleteAllForUser(user.id);

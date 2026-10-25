@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import { AppDataSource } from "../config/data-source";
-import { createProduct, deleteProduct, getAllCustomers, getAllOrders, getAllProducts, getOrderDetail, toggleLock, updateProduct } from "../controllers/admin.controller";
 import { Product } from "../entities/Product";
 import { SubCategory } from "../entities/SubCategory";
 import { User, UserRole } from '../entities/User';
@@ -187,7 +186,7 @@ export const AdminService = {
         }
 
         return {
-            message: customer.id ? 'Account locked successfully' : 'Account unlocked successfully',
+            message: customer.isLocked ? 'Account locked successfully' : 'Account unlocked successfully',
             isLocked: customer.isLocked
         }
     },
