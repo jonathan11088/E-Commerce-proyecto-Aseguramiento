@@ -1,0 +1,81 @@
+# Pipeline de integracion continua (Fase 2: E9 y E10).
+# Se ejecuta en cada Pull Request y en cada push hacia dev, qa y main.
+# Los jobs "Backend" y "Frontend" se marcan como checks obligatorios en la
+# proteccion de ramas, asi un PR con pruebas fallidas no se puede fusionar.
+name: CI
+
+on:
+  pull_request:
+    branches: [dev, qa, main]
+  push:
+    branches: [dev, qa, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BACK_END
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BACK_END/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar (TypeScript)
+        run: npm run build
+
+      - name: Pruebas unitarias con cobertura (Jest)
+        run: npm run test:coverage --if-present -- --ci
+
+      - name: Publicar reporte de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-backend
+          path: BACK_END/coverage
+          if-no-files-found: ignore
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: FRONT_END/frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: FRONT_END/frontend/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar (Angular)
+        run: npm run build
+
+      - name: Pruebas unitarias con cobertura (Karma + Jasmine)
+        run: npm run test:ci --if-present
+
+      - name: Publicar reporte de cobertura
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-frontend
+          path: FRONT_END/frontend/coverage
+          if-no-files-found: ignore
