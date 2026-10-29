@@ -45,3 +45,24 @@ describe('AdminService.toggleLock (RF-05)', () => {
         expect(SessionStore.get('pc')).toBeDefined();
     });
 });
+
+describe('AdminService pedidos (RF-26)', () => {
+    it('getOrderDetail no expone el hash de la contrasena del cliente (DEF-11)', async () => {
+        repoFor('Order').findOne.mockResolvedValue({ id: 3, user: { id: 8, passwordHash: '$2b$12$x' } });
+
+        const order = await AdminService.getOrderDetail(3);
+
+        expect(order.user).not.toHaveProperty('passwordHash');
+    });
+
+    it('getAllOrders limpia el hash en cada pedido del listado', async () => {
+        repoFor('Order').find.mockResolvedValue([
+            { id: 1, user: { id: 8, passwordHash: 'h1' } },
+            { id: 2, user: { id: 9, passwordHash: 'h2' } },
+        ]);
+
+        const orders = await AdminService.getAllOrders();
+
+        expect(orders.every((o: any) => !('passwordHash' in o.user))).toBe(true);
+    });
+});

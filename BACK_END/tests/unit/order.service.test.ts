@@ -96,4 +96,12 @@ describe('OrderService consultas (RF-21, RF-22)', () => {
             where: { id: 50, user: { id: 1 } },
         }));
     });
+
+    it('getOrderById nunca devuelve el hash de la contrasena del cliente (DEF-11)', async () => {
+        repoFor('Order').findOne.mockResolvedValue({ id: 50, user: { id: 1, email: 'a@mail.com', passwordHash: '$2b$12$x' } });
+
+        const order = await OrderService.getOrderById(1, 50);
+
+        expect(order.user).toEqual({ id: 1, email: 'a@mail.com' });
+    });
 });

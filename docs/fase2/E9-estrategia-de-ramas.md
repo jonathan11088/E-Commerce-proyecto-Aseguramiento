@@ -22,7 +22,7 @@ feature/xx ──PR──▶ dev ──PR──▶ qa ──PR──▶ main
 1. **Trabajo de una tarea.** Se crea la rama desde `dev` actualizado:
    `git checkout dev && git pull && git checkout -b feature/nombre-corto`
 2. **feature → dev.** Se abre un PR hacia `dev` con la plantilla del repositorio. Requisitos para fusionar:
-   - El pipeline CI (`Backend` y `Frontend`: compilación + pruebas unitarias) en verde.
+   - El pipeline CI (`Backend`, `Frontend` y `API`: compilación, pruebas unitarias y pruebas de API) en verde.
    - Al menos **1 aprobación de otro integrante** (el autor no puede aprobarse a sí mismo).
    - Todas las conversaciones de la revisión resueltas.
 3. **dev → qa (promoción a QA).** Cuando un conjunto de tareas está listo para probarse, se abre un PR `dev → qa`. Se ejecutan los casos de prueba del plan sobre esa versión. Mismos requisitos: CI verde + 1 aprobación.
@@ -49,7 +49,7 @@ Quien revisa no solo pulsa "Approve". Debe dejar al menos un comentario concreto
 
 ## 5. Bloqueo del merge si el pipeline falla
 
-El archivo `.github/workflows/ci.yml` se ejecuta en cada PR hacia `dev`, `qa` y `main`. En la protección de ramas, los checks **`Backend`** y **`Frontend`** están marcados como obligatorios, por lo que GitHub deshabilita el botón "Merge" mientras alguno esté en rojo o en ejecución.
+El archivo `.github/workflows/ci.yml` se ejecuta en cada PR hacia `dev`, `qa` y `main`. En la protección de ramas, los checks **`Backend`**, **`Frontend`** y **`API`** están marcados como obligatorios, por lo que GitHub deshabilita el botón "Merge" mientras alguno esté en rojo o en ejecución.
 
 ---
 
@@ -78,13 +78,13 @@ El archivo `.github/workflows/ci.yml` se ejecuta en cada PR hacia `dev`, `qa` y 
      - **Required approvals:** `1`.
      - Marcar **Dismiss stale pull request approvals when new commits are pushed**.
      - Marcar **Require conversation resolution before merging**.
-   - Marcar **Require status checks to pass** → **Add checks** → escribir y elegir `Backend` y luego `Frontend`.
+   - Marcar **Require status checks to pass** → **Add checks** → escribir y elegir `Backend`, `Frontend` y `API`.
      - Marcar **Require branches to be up to date before merging**.
    - **Create**.
 3. Si es *classic branch protection rule*:
    - **Branch name pattern:** `dev`.
    - Marcar **Require a pull request before merging** → **Require approvals: 1** → **Dismiss stale approvals**.
-   - Marcar **Require status checks to pass before merging** → **Require branches to be up to date** → buscar y agregar `Backend` y `Frontend`.
+   - Marcar **Require status checks to pass before merging** → **Require branches to be up to date** → buscar y agregar `Backend`, `Frontend` y `API`.
    - Marcar **Require conversation resolution before merging**.
    - Marcar **Do not allow bypassing the above settings**.
    - **Create**.
@@ -101,9 +101,10 @@ El archivo `.github/workflows/ci.yml` se ejecuta en cada PR hacia `dev`, `qa` y 
 | # | Rama origen → destino | Contenido | Autor | Revisor |
 |---|---|---|---|---|
 | 1 | `feature/e9-pipeline-ci` → `dev` | Pipeline CI, plantilla de PR y esta política | | |
-| 2 | `feature/e10-pruebas-backend` → `dev` | Jest, 43 pruebas, corrección de defectos | | |
+| 2 | `feature/e10-pruebas-backend` → `dev` | Jest, pruebas unitarias del backend, corrección de defectos | | |
 | 3 | `feature/e10-pruebas-frontend` → `dev` | Karma/Jasmine, 19 pruebas | | |
-| 4 | `dev` → `qa` | Promoción a QA | | |
-| 5 | `qa` → `main` | Promoción a PROD | | |
+| 4 | `feature/e11-pruebas-api` → `dev` | Colección Postman, Newman en el pipeline, DEF-11 | | |
+| 5 | `dev` → `qa` | Promoción a QA | | |
+| 6 | `qa` → `main` | Promoción a PROD | | |
 
 Completar autor y revisor con los nombres reales y adjuntar capturas de cada revisión.

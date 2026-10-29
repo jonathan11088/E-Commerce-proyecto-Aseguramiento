@@ -7,6 +7,7 @@ import { User, UserRole } from '../entities/User';
 import { ApiError } from '../utils/ApiError/ApiError';
 import { Order } from '../entities/Order';
 import { SessionStore } from '../middleware/sessionStore';
+import { withoutPasswordHash } from '../utils/sanitizeOrder';
 
 // ----> Product Management <----
 /**
@@ -197,10 +198,11 @@ export const AdminService = {
    * Results are ordered by creation date (newest first).
    */
     async getAllOrders() {
-        return AppDataSource.getRepository(Order).find({
+        const orders = await AppDataSource.getRepository(Order).find({
             relations: { user: true, items: { product: true } },
             order: { createdAt: 'DESC' },
         });
+        return orders.map(withoutPasswordHash);
     },
 
     /**
@@ -218,7 +220,7 @@ export const AdminService = {
 
         if (!order) throw new ApiError("Order Not Found", 404);
 
-        return order;
+        return withoutPasswordHash(order);
     }
 
 }
