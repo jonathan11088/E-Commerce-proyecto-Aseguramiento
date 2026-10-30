@@ -1,0 +1,33 @@
+# Prueba de carga (E14). Se ejecuta a mano desde la pestana Actions porque
+# genera trafico real contra el ambiente desplegado en Render.
+name: Prueba de carga
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: URL del backend desplegado
+        default: https://e-commerce-backend-2pn0.onrender.com
+        required: true
+
+jobs:
+  k6:
+    name: k6 (0 a 50 usuarios, 5 minutos)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: grafana/setup-k6-action@v1
+
+      - name: Ejecutar prueba de carga
+        working-directory: tests/carga
+        run: |
+          mkdir -p resultados
+          k6 run -e BASE_URL="${{ inputs.base_url }}" carga-catalogo.js
+
+      - name: Publicar resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-carga
+          path: tests/carga/resultados
