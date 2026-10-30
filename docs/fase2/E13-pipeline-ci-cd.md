@@ -26,7 +26,7 @@ En producción hay **un solo servicio web en Render** que compila el backend y e
 
 ## 4. Configuración manual en Render (una sola vez)
 1. Servicio web con Root Directory `BACK_END` y rama `main`.
-2. **Build Command:** `npm install --include=dev && npm run build && cd ../FRONT_END/frontend && npm install && npm run build`
+2. **Build Command:** `npm install --include=dev && npm run build && cd ../FRONT_END/frontend && npm install --include=dev && npm run build`
 3. **Start Command:** `npm start`
 4. Variables: `NODE_ENV=production`, `JWT_SECRET`, `DB_PATH=./ecommerce.db`, `NODE_VERSION=22`.
 5. **Settings → Build & Deploy → Auto-Deploy: Off** y copiar el **Deploy Hook**.
