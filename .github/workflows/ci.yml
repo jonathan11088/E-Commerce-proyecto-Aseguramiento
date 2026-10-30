@@ -127,7 +127,7 @@ jobs:
     env:
       PORT: 3000
       JWT_SECRET: ci-only-secret
-      DB_PATH: ${{ runner.temp }}/ecommerce-ci.db
+      DB_PATH: /tmp/ecommerce-ci.db
     steps:
       - uses: actions/checkout@v4
 
