@@ -1,0 +1,21 @@
+# Analisis de SonarCloud sobre el codigo original de la Fase 1 (linea base del E12).
+# Esta rama no tiene pruebas ni correcciones: sirve solo como "estado inicial".
+name: Sonar linea base
+
+on:
+  push:
+    branches: [sonar/linea-base]
+  workflow_dispatch:
+
+jobs:
+  sonarcloud:
+    name: SonarCloud linea base
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
