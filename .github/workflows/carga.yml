@@ -7,7 +7,7 @@ on:
     inputs:
       base_url:
         description: URL del backend desplegado
-        default: https://e-commerce-backend-2pn0.onrender.com
+        default: https://e-commerce-proyecto-aseguramiento-backend.onrender.com
         required: true
 
 jobs:

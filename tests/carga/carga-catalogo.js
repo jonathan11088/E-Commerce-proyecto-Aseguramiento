@@ -16,7 +16,7 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
 
-const BASE_URL = __ENV.BASE_URL || 'https://e-commerce-backend-2pn0.onrender.com';
+const BASE_URL = __ENV.BASE_URL || 'https://e-commerce-proyecto-aseguramiento-backend.onrender.com';
 
 const listadoDuracion = new Trend('listado_duracion', true);
 const detalleDuracion = new Trend('detalle_duracion', true);

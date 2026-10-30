@@ -22,12 +22,12 @@ Si una etapa falla, las siguientes no se ejecutan y el Pull Request queda bloque
 | Push a `qa` | Etapas 1 a 3 (ambiente QA = versión candidata) |
 | Push a `main` | Etapas 1 a 4: **despliega a producción en Render** |
 
-El despliegue llama a los *Deploy Hooks* de Render del backend y del frontend y después espera a que `https://e-commerce-backend-2pn0.onrender.com/api/health` responda.
+En producción hay **un solo servicio web en Render** que compila el backend y el frontend. Express sirve la API y el build de Angular desde el mismo origen (RNF-08), así que la cookie de sesión funciona sin configuración CORS. El despliegue llama al *Deploy Hook* de ese servicio y después espera a que `https://e-commerce-proyecto-aseguramiento-backend.onrender.com/api/health` responda.
 
 ## 4. Configuración manual en Render (una sola vez)
-1. Entrar a https://dashboard.render.com y abrir el servicio del **backend**.
-2. **Settings → Build & Deploy → Auto-Deploy** → cambiar a **Off** (así solo despliega el pipeline, después de que todas las pruebas pasan).
-3. En la misma página, **Deploy Hook** → copiar la URL.
-4. En GitHub: **Settings → Secrets and variables → Actions → New repository secret** → Name `RENDER_DEPLOY_HOOK_BACKEND` → pegar la URL.
-5. Repetir con el servicio del **frontend** y guardar `RENDER_DEPLOY_HOOK_FRONTEND`.
-6. Comprobar en Render que ambos servicios usan este repositorio y la rama `main`.
+1. Servicio web con Root Directory `BACK_END` y rama `main`.
+2. **Build Command:** `npm install --include=dev && npm run build && cd ../FRONT_END/frontend && npm install && npm run build`
+3. **Start Command:** `npm start`
+4. Variables: `NODE_ENV=production`, `JWT_SECRET`, `DB_PATH=./ecommerce.db`, `NODE_VERSION=22`.
+5. **Settings → Build & Deploy → Auto-Deploy: Off** y copiar el **Deploy Hook**.
+6. En GitHub: secreto `RENDER_DEPLOY_HOOK` con esa URL.
