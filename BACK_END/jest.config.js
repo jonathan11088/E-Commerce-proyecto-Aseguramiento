@@ -1,6 +1,5 @@
 /**
  * Configuracion de Jest para las pruebas unitarias del backend (E10).
- * La cobertura se mide solo sobre los modulos criticos definidos en el E2 (seccion 2.5).
  */
 module.exports = {
     testEnvironment: 'node',
@@ -11,13 +10,15 @@ module.exports = {
     },
     setupFiles: ['<rootDir>/tests/helpers/env.ts'],
     clearMocks: true,
+    // Se mide todo el codigo con logica; el informe del E10 se enfoca en los modulos criticos del E2.
     collectCoverageFrom: [
-        'src/services/auth.service.ts',
-        'src/services/order.service.ts',
-        'src/services/admin.service.ts',
-        'src/middleware/auth.middleware.ts',
-        'src/middleware/rbac.middleware.ts',
-        'src/middleware/sessionStore.ts',
+        'src/**/*.ts',
+        '!src/seeds/**',
+        '!src/scripts/**',
+        '!src/migrations/**',
+        '!src/config/**',
+        '!src/entities/**',
+        '!src/index.ts',
     ],
     coverageDirectory: 'coverage',
     coverageReporters: ['text', 'text-summary', 'lcov', 'json-summary'],

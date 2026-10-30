@@ -112,6 +112,17 @@ jobs:
         env:
           SONAR_HOST_URL: https://sonarcloud.io
 
+      - name: Listar bugs y vulnerabilidades abiertos
+        if: always() && env.SONAR_TOKEN != ''
+        run: |
+          KEY=$(grep '^sonar.projectKey=' sonar-project.properties | cut -d= -f2)
+          SCOPE="branch=${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+          if [ -n "${{ github.event.pull_request.number }}" ]; then SCOPE="pullRequest=${{ github.event.pull_request.number }}"; fi
+          curl -sf -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/issues/search?componentKeys=$KEY&$SCOPE&resolved=false&types=VULNERABILITY,BUG&ps=100" \
+            | jq -r '.issues[] | "\(.severity) \(.type) \(.rule) \(.component):\(.line) \(.message)"' || true
+          curl -sf -u "$SONAR_TOKEN:" "https://sonarcloud.io/api/hotspots/search?projectKey=$KEY&$SCOPE&status=TO_REVIEW&ps=100" \
+            | jq -r '.hotspots[] | "HOTSPOT \(.vulnerabilityProbability) \(.ruleKey) \(.component):\(.line) \(.message)"' || true
+
       - name: Aviso si falta configurar SonarCloud
         if: env.SONAR_TOKEN == ''
         run: echo "::warning::Falta el secreto SONAR_TOKEN, el analisis de SonarCloud no se ejecuto"
