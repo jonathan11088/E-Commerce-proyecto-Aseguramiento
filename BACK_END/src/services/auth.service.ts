@@ -1,7 +1,7 @@
 import { AppDataSource } from "../config/data-source";
 import { User, UserRole } from "../entities/User";
 import bcrypt from "bcrypt";
-import { randomInt } from "crypto";
+import { randomBytes, randomInt } from "crypto";
 import jwt from 'jsonwebtoken';
 import { SessionStore } from "../middleware/sessionStore";
 import { ResetCode } from "../entities/ResetCode";
@@ -9,9 +9,12 @@ import { ResetCode } from "../entities/ResetCode";
 const SALT_ROUND = 12;
 const JWT_EXPIRES_IN = '7d';
 const RESET_CODE_EXPIRY_MINUTES = 10;
-// Hash bcrypt de referencia (costo 12) para comparar cuando el correo no existe.
+// Hash bcrypt de referencia para comparar cuando el correo no existe.
 // Asi la respuesta tarda lo mismo y no revela que cuentas estan registradas (DEF-01 / DEF-09).
-const DUMMY_HASH = '$2b$12$xvGviOEWaL3r9tVsculjteQzIefnAb2GDnOwePwb5a7/fB.zYHXj6';
+// Se genera en tiempo de ejecucion a partir de un valor aleatorio, nunca queda escrito en el codigo.
+let dummyHash: Promise<string> | undefined;
+const getDummyHash = (): Promise<string> =>
+    (dummyHash ??= bcrypt.hash(randomBytes(16).toString('hex'), SALT_ROUND));
 
 /**
    * Registers a new customer account.
@@ -68,7 +71,7 @@ export const AuthService = {
         const userRepo = await AppDataSource.getRepository(User);
         const normalisedEmail = email.toLowerCase().trim();
         const user = await userRepo.findOne({ where: { email: normalisedEmail } });
-        const isMatch = await bcrypt.compare(password, user?.passwordHash ?? DUMMY_HASH);
+        const isMatch = await bcrypt.compare(password, user?.passwordHash ?? await getDummyHash());
 
         if (!user || !isMatch) {
             const error: any = new Error("Invalid Credential");

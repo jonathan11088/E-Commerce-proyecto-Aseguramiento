@@ -81,11 +81,13 @@ describe('AuthService.login (RF-02)', () => {
     it('con un correo inexistente responde igual que con contrasena incorrecta y si ejecuta bcrypt (DEF-01 / DEF-09)', async () => {
         repoFor('User').findOne.mockResolvedValue(null);
         mockedCompare.mockResolvedValue(false);
+        mockedHash.mockResolvedValue('$2b$12$hashdereferencia');
 
         await expect(AuthService.login('no.existe@mail.com', 'cualquiera'))
             .rejects.toMatchObject({ status: 403, message: 'Invalid Credential' });
-        // Se compara contra un hash bcrypt real de referencia, nunca contra undefined
-        expect(mockedCompare).toHaveBeenCalledWith('cualquiera', expect.stringMatching(/^\$2b\$12\$/));
+        // Se compara contra un hash bcrypt de referencia generado con costo 12, nunca contra undefined
+        expect(mockedHash).toHaveBeenCalledWith(expect.any(String), 12);
+        expect(mockedCompare).toHaveBeenCalledWith('cualquiera', '$2b$12$hashdereferencia');
     });
 
     it('rechaza con 403 una cuenta bloqueada aunque la contrasena sea correcta', async () => {
