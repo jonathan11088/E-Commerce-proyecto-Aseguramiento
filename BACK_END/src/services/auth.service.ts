@@ -1,6 +1,7 @@
 import { AppDataSource } from "../config/data-source";
 import { User, UserRole } from "../entities/User";
 import bcrypt from "bcrypt";
+import { randomInt } from "crypto";
 import jwt from 'jsonwebtoken';
 import { SessionStore } from "../middleware/sessionStore";
 import { ResetCode } from "../entities/ResetCode";
@@ -148,9 +149,9 @@ export const AuthService = {
                 await resetRepo.save(code);
         }
 
-        // Generate 6 digit code
-        // Generates a number between 100,000 and 999,999
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        // Generate 6 digit code between 100,000 and 999,999
+        // crypto.randomInt is cryptographically secure, unlike Math.random
+        const code = randomInt(100000, 1000000).toString();
 
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + RESET_CODE_EXPIRY_MINUTES);

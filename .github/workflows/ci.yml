@@ -1,7 +1,8 @@
-# Pipeline de integracion continua (Fase 2: E9, E10 y E11).
-# Se ejecuta en cada Pull Request y en cada push hacia dev, qa y main.
-# Los jobs "Backend", "Frontend" y "API" se marcan como checks obligatorios en la
-# proteccion de ramas, asi un PR con pruebas fallidas no se puede fusionar.
+# Pipeline de integracion continua (Fase 2: E9 a E12).
+# Orden: compilacion y pruebas unitarias -> analisis estatico con quality gate
+#        -> pruebas de API.
+# Los checks "Backend", "Frontend", "SonarCloud" y "API" son obligatorios en la
+# proteccion de ramas, asi un PR que falle en cualquier etapa no se puede fusionar.
 name: CI
 
 on:
@@ -16,6 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ---------- 1. Compilacion y pruebas unitarias ----------
   backend:
     name: Backend
     runs-on: ubuntu-latest
@@ -80,9 +82,44 @@ jobs:
           path: FRONT_END/frontend/coverage
           if-no-files-found: ignore
 
+  # ---------- 2. Analisis estatico con quality gate ----------
+  sonarcloud:
+    name: SonarCloud
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Descargar cobertura del backend
+        uses: actions/download-artifact@v4
+        with:
+          name: cobertura-backend
+          path: BACK_END/coverage
+
+      - name: Descargar cobertura del frontend
+        uses: actions/download-artifact@v4
+        with:
+          name: cobertura-frontend
+          path: FRONT_END/frontend/coverage
+
+      - name: Analisis SonarCloud y verificacion del quality gate
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@v5
+        env:
+          SONAR_HOST_URL: https://sonarcloud.io
+
+      - name: Aviso si falta configurar SonarCloud
+        if: env.SONAR_TOKEN == ''
+        run: echo "::warning::Falta el secreto SONAR_TOKEN, el analisis de SonarCloud no se ejecuto"
+
+  # ---------- 3. Pruebas de API ----------
   api:
     name: API
-    needs: backend
+    needs: sonarcloud
     runs-on: ubuntu-latest
     defaults:
       run:
