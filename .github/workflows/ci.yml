@@ -70,7 +70,7 @@ jobs:
         run: npm run build
 
       - name: Pruebas unitarias con cobertura (Karma + Jasmine)
-        run: npm run test:ci --if-present
+        run: npm run test:ci
 
       - name: Publicar reporte de cobertura
         if: always()
