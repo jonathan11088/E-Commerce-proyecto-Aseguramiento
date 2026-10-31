@@ -9,7 +9,7 @@
 
 > **Diferencia de niveles.** Estas pruebas verifican **una unidad de código aislada** (un servicio, un middleware, un guard) con un framework de pruebas, sin levantar el servidor ni la base de datos. Las pruebas con Postman/Newman son **pruebas de API** (el sistema corriendo, vía HTTP) y no forman parte de este entregable.
 
-## 2. Total de pruebas: 62
+## 2. Total de pruebas: 65
 
 | Archivo | Unidad bajo prueba | Pruebas |
 |---|---|---|
@@ -17,15 +17,15 @@
 | `tests/unit/rbac.middleware.test.ts` | `rbac.middleware.ts` | 4 |
 | `tests/unit/auth.middleware.test.ts` | `auth.middleware.ts` (`authenticate`, `optionalAuth`) | 10 |
 | `tests/unit/auth.service.test.ts` | `auth.service.ts` (register, login, logout, getMe, forgot/reset password) | 15 |
-| `tests/unit/order.service.test.ts` | `order.service.ts` (checkout transaccional, consultas) | 6 |
-| `tests/unit/admin.service.test.ts` | `admin.service.ts` (`toggleLock`) | 3 |
-| **Subtotal backend** | | **43** |
+| `tests/unit/order.service.test.ts` | `order.service.ts` (checkout transaccional, consultas) | 7 |
+| `tests/unit/admin.service.test.ts` | `admin.service.ts` (`toggleLock`, detalle y listado de pedidos) | 5 |
+| **Subtotal backend** | | **46** |
 | `core/guards/guards.spec.ts` | `AuthGuard`, `AdminGuard`, `GuestGuard` | 7 |
 | `core/services/auth.service.spec.ts` | `AuthService` del frontend | 5 |
 | `core/interceptors/credentials.interceptor.spec.ts` | `CredentialsInterceptor` | 4 |
 | `shared/Pipes/pipes.spec.ts` | `FilterActivePipe`, `FilterLockedPipe` | 3 |
 | **Subtotal frontend** | | **19** |
-| **Total** | | **62** |
+| **Total** | | **65** |
 
 ## 3. Cobertura sobre los módulos críticos del E2
 
@@ -41,9 +41,9 @@ Módulos críticos definidos en el E2, sección 2.5: autenticación y sesiones (
 | `middleware/rbac.middleware.ts` | 0 % | 100 % | **+100 pp** | 100 % |
 | `middleware/auth.middleware.ts` | 0 % | 100 % | **+100 pp** | 77.8 % |
 | `services/auth.service.ts` | 0 % | 97.6 % | **+97.6 pp** | 100 % |
-| `services/order.service.ts` | 0 % | 96.8 % | **+96.8 pp** | 100 % |
-| `services/admin.service.ts` (archivo completo; solo `toggleLock` es crítico) | 0 % | 33.9 % | **+33.9 pp** | 13.8 % |
-| **Total módulos críticos backend** | **0 %** | **82.8 %** | **+82.8 pp** | 52.6 % |
+| `services/order.service.ts` | 0 % | 100 % | **+100 pp** | 100 % |
+| `services/admin.service.ts` (archivo completo; solo `toggleLock` es crítico) | 0 % | 43.1 % | **+43.1 pp** | 13.8 % |
+| **Total módulos críticos backend** | **0 %** | **85.2 %** | **+85.2 pp** | 52.6 % |
 
 ### Frontend (Karma, `npm run test:ci`)
 
@@ -73,7 +73,7 @@ El incremento supera con amplitud los **20 puntos porcentuales** exigidos. Los r
 
 ## 5. Defectos detectados por las pruebas y corregidos
 
-Con el código original, **9 de las 43 pruebas del backend fallaban**. Se corrigió lo mínimo en los módulos críticos:
+Con el código original, **9 de las primeras 43 pruebas del backend fallaban**. Se corrigió lo mínimo en los módulos críticos:
 
 | Defecto | Archivo | Corrección | Prueba que lo cubre |
 |---|---|---|---|
@@ -83,6 +83,7 @@ Con el código original, **9 de las 43 pruebas del backend fallaban**. Se corrig
 | Nuevo: un usuario bloqueado no perdía sus otras sesiones | `middleware/auth.middleware.ts` | `deleteAllForUser(user.id)` en lugar de pasar el token | "rechaza a un usuario bloqueado y cierra todas sus sesiones…" |
 | Nuevo: `SessionStore.size()` se llamaba a sí mismo (recursión infinita) | `middleware/sessionStore.ts` | `return sessionStore.size` | "size devuelve la cantidad de sesiones activas…" |
 | Nuevo: `toggleLock` siempre respondía "Account locked" | `services/admin.service.ts` | El mensaje depende de `isLocked` | "al desbloquear informa el desbloqueo…" |
+| DEF-11 (encontrado en E11): el detalle de pedido devolvía el `passwordHash` del cliente | `utils/sanitizeOrder.ts`, `order.service.ts`, `admin.service.ts` | Se elimina el hash antes de responder | "getOrderDetail no expone el hash…", "getOrderById nunca devuelve el hash…" |
 
 También se quitaron imports circulares sin uso (servicios que importaban sus propios controladores).
 

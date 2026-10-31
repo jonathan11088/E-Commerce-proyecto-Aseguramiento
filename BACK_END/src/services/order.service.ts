@@ -5,6 +5,7 @@ import { OrderItem } from "../entities/OrderItem";
 import { Product } from "../entities/Product";
 import { User } from "../entities/User";
 import { ApiError } from "../utils/ApiError/ApiError";
+import { withoutPasswordHash } from "../utils/sanitizeOrder";
 
 const VALID_PAYMENT_METHODS = [
     'Credit Card',
@@ -56,7 +57,7 @@ export const OrderService = {
 
         if (!orderRepo) throw new ApiError("Order Not Found", 404);
 
-        return orderRepo;
+        return withoutPasswordHash(orderRepo);
     },
 
     /**
@@ -128,10 +129,11 @@ export const OrderService = {
             // 5. Clear the Cart
             await manager.delete(CartItem, {user: {id: userId}});
 
-            return manager.findOne(Order, {
+            const placed = await manager.findOne(Order, {
                 where: {id: saveOrder.id},
                 relations: {items: {product: true}, user: true},
-            }) as Promise<Order>;
+            });
+            return withoutPasswordHash(placed) as Order;
         });
     }
 

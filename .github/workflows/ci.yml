@@ -1,6 +1,6 @@
-# Pipeline de integracion continua (Fase 2: E9 y E10).
+# Pipeline de integracion continua (Fase 2: E9, E10 y E11).
 # Se ejecuta en cada Pull Request y en cada push hacia dev, qa y main.
-# Los jobs "Backend" y "Frontend" se marcan como checks obligatorios en la
+# Los jobs "Backend", "Frontend" y "API" se marcan como checks obligatorios en la
 # proteccion de ramas, asi un PR con pruebas fallidas no se puede fusionar.
 name: CI
 
@@ -78,4 +78,52 @@ jobs:
         with:
           name: cobertura-frontend
           path: FRONT_END/frontend/coverage
+          if-no-files-found: ignore
+
+  api:
+    name: API
+    needs: backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: BACK_END
+    env:
+      PORT: 3000
+      JWT_SECRET: ci-only-secret
+      DB_PATH: /tmp/ecommerce-ci.db
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: BACK_END/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Levantar la API con una copia de la base de datos
+        run: |
+          cp ecommerce.db "$DB_PATH"
+          nohup npm start > api.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:3000/api/health && exit 0
+            sleep 1
+          done
+          cat api.log
+          exit 1
+
+      - name: Pruebas de API (Newman)
+        run: npm run test:api
+
+      - name: Publicar reporte de Newman
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-newman
+          path: BACK_END/reports
           if-no-files-found: ignore
