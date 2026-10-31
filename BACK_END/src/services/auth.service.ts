@@ -148,8 +148,8 @@ export const AuthService = {
 
         const existingCode = await resetRepo.find({ where: { user: { id: user.id }, used: false } });
         for (const code of existingCode) {
-            code.used = true,
-                await resetRepo.save(code);
+            code.used = true;
+            await resetRepo.save(code);
         }
 
         // Generate 6 digit code between 100,000 and 999,999
