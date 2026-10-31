@@ -1,16 +1,20 @@
-import strict from "node:assert/strict";
 import { AppDataSource } from "../config/data-source";
 import { User, UserRole } from "../entities/User";
 import bcrypt from "bcrypt";
+import { randomBytes, randomInt } from "crypto";
 import jwt from 'jsonwebtoken';
 import { SessionStore } from "../middleware/sessionStore";
-import { forgotPassword, resetPassword } from "../controllers/auth.controller";
 import { ResetCode } from "../entities/ResetCode";
-import { Code } from "typeorm";
 
 const SALT_ROUND = 12;
 const JWT_EXPIRES_IN = '7d';
 const RESET_CODE_EXPIRY_MINUTES = 10;
+// Hash bcrypt de referencia para comparar cuando el correo no existe.
+// Asi la respuesta tarda lo mismo y no revela que cuentas estan registradas (DEF-01 / DEF-09).
+// Se genera en tiempo de ejecucion a partir de un valor aleatorio, nunca queda escrito en el codigo.
+let dummyHash: Promise<string> | undefined;
+const getDummyHash = (): Promise<string> =>
+    (dummyHash ??= bcrypt.hash(randomBytes(16).toString('hex'), SALT_ROUND));
 
 /**
    * Registers a new customer account.
@@ -67,7 +71,7 @@ export const AuthService = {
         const userRepo = await AppDataSource.getRepository(User);
         const normalisedEmail = email.toLowerCase().trim();
         const user = await userRepo.findOne({ where: { email: normalisedEmail } });
-        const isMatch = await bcrypt.compare(password, user?.passwordHash!);
+        const isMatch = await bcrypt.compare(password, user?.passwordHash ?? await getDummyHash());
 
         if (!user || !isMatch) {
             const error: any = new Error("Invalid Credential");
@@ -148,9 +152,9 @@ export const AuthService = {
                 await resetRepo.save(code);
         }
 
-        // Generate 6 digit code
-        // Generates a number between 100,000 and 999,999
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        // Generate 6 digit code between 100,000 and 999,999
+        // crypto.randomInt is cryptographically secure, unlike Math.random
+        const code = randomInt(100000, 1000000).toString();
 
         const expiresAt = new Date();
         expiresAt.setMinutes(expiresAt.getMinutes() + RESET_CODE_EXPIRY_MINUTES);
@@ -196,7 +200,7 @@ export const AuthService = {
         user.passwordHash = await bcrypt.hash(newPassword, SALT_ROUND);
 
         resetCode.used = true;
-        await userRepo.save(resetCode);
+        await resetRepo.save(resetCode);
         await userRepo.save(user);
 
         SessionStore.deleteAllForUser(user.id);

@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Customer, Order, Product } from '../../shared/Interface';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment.prod';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -76,6 +76,6 @@ export class AdminService {
 
   getOrderById(id: string) {
     // Make sure this URL is protected by your Admin middleware on the backend
-    return this.http.get(`http://localhost:3000/api/admin/orders/${id}`);
+    return this.http.get(`${this.apiUrl}/orders/${id}`, { withCredentials: true });
   }
 }

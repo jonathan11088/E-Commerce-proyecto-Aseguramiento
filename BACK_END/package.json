@@ -4,7 +4,7 @@
   "description": "Backend SetUp",
   "main": "index.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "npx ts-node src/index.ts",
@@ -13,7 +13,9 @@
     "migration:generate": "npm run typeorm migration:generate -- -d \"src/data-source.cli.ts\"",
     "migration:run": "npm run typeorm migration:run -- -d \"src/data-source.cli.ts\"",
     "migration:revert": "npm run typeorm migration:revert -- -d \"src/config/data-source.cli.ts\"",
-    "schema:export": "ts-node -r reflect-metadata src/scripts/exportSchema.ts"
+    "schema:export": "ts-node -r reflect-metadata src/scripts/exportSchema.ts",
+    "test:coverage": "jest --coverage",
+    "test:api": "newman run tests/api/ecommerce-api.postman_collection.json -e tests/api/ci.postman_environment.json --reporters cli,junit --reporter-junit-export reports/newman-junit.xml"
   },
   "repository": {
     "type": "git",
@@ -52,10 +54,14 @@
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
+    "@types/jest": "^29.5.14",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.1.0",
     "@types/node": "^25.5.0",
+    "jest": "^29.7.0",
+    "newman": "^6.2.3",
     "nodemon": "^3.1.14",
+    "ts-jest": "^29.4.15",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   }

@@ -20,6 +20,9 @@ import fs from "fs";
 dotenv.config();
 const app = express();
 
+// Do not reveal the framework and version in the X-Powered-By header
+app.disable('x-powered-by');
+
 /**
  * CORS(cross origin resource sharing) 
  * Allows your Frontend (e.g., Angular on port 4200) to securely communicate with this API.
