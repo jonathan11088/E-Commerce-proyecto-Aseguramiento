@@ -60,7 +60,7 @@ export const SessionStore = {
    * Useful for debugging and health check endpoints.
    */
     size(): number {
-        return SessionStore.size();
+        return sessionStore.size;
     }
 }
 

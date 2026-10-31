@@ -74,7 +74,7 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
     try {
         const id = Number(req.params.id);
         if(isNaN(id)){res.status(400).json({Error: "Invalid Product ID"}); return;} 
-        const product = await AdminService.deleteProduct(id);
+        await AdminService.deleteProduct(id);
         res.json({message: "Product Deleted", deletedId: id});
     } catch (err) {
         next(err);
