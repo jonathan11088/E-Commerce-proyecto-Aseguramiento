@@ -77,7 +77,6 @@ export const CartSerice = {
      * Quantity of 0 removes the item entirely.
      */
     async updateCartItem(userId: number, productId: number, quantity: number) {
-        const productRepo = await AppDataSource.getRepository(Product);
         const cartItemRepo = AppDataSource.getRepository(CartItem);
 
         const item = await cartItemRepo.findOne({
@@ -92,7 +91,6 @@ export const CartSerice = {
             throw new ApiError("Item not found in cart", 404)
         }
 
-        const product = item.product;
 
         // Quantity 0 means remove
         if (quantity <= 0) {
@@ -122,7 +120,6 @@ export const CartSerice = {
      * Removes a single product from the cart.
      */
     async removeFromCart(userId: number, productId: number) {
-        const productRepo = await AppDataSource.getRepository(Product);
         const cartItemRepo = await AppDataSource.getRepository(CartItem);
         // Find the item in the cart (include the product relation to get quantity)
         const item = await cartItemRepo.findOne({
@@ -150,7 +147,6 @@ export const CartSerice = {
      * but useful for admin/testing purposes.
      */
     async clearCart(userId: number) {
-        const productRepo = await AppDataSource.getRepository(Product);
         const cartItemRepo = await AppDataSource.getRepository(CartItem);
         const items = await cartItemRepo.find({
             where: { user: { id: userId } },

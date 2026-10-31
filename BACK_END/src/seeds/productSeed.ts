@@ -78,6 +78,45 @@ function loadCsvRows(csvPath: string): CsvProductRow[] {
   return rows;
 }
 
+type SubCategoryLookup = {
+  bySubName: Map<string, SubCategory>;
+  byCatName: Map<string, SubCategory>;
+  byId: Map<number, SubCategory>;
+};
+
+function buildSubCategoryLookup(subCategories: SubCategory[]): SubCategoryLookup {
+  // Map: exact subcategory name → SubCategory
+  const bySubName = new Map<string, SubCategory>(
+    subCategories.map(s => [s.name.trim().toLowerCase(), s])
+  );
+
+  // Map: category name → first SubCategory of that category (fallback)
+  const byCatName = new Map<string, SubCategory>();
+  for (const s of subCategories) {
+    const catName = s.category?.name?.trim().toLowerCase();
+    if (catName && !byCatName.has(catName)) {
+      byCatName.set(catName, s);
+    }
+  }
+
+  // Map: numeric id → SubCategory
+  const byId = new Map<number, SubCategory>(
+    subCategories.map(s => [s.id, s])
+  );
+
+  return { bySubName, byCatName, byId };
+}
+
+// Resolve subcategory — try name first, then category fallback, then id
+function resolveSubCategory(row: CsvProductRow, lookup: SubCategoryLookup): SubCategory | undefined {
+  const subName = (row.subCategoryName ?? "").trim().toLowerCase();
+  const byName = subName ? lookup.bySubName.get(subName) ?? lookup.byCatName.get(subName) : undefined;
+  if (byName) return byName;
+
+  const id = Number(row.subCategoryId);
+  return row.subCategoryId && !isNaN(id) ? lookup.byId.get(id) : undefined;
+}
+
 export async function seedProducts(): Promise<void> {
   const productRepo = AppDataSource.getRepository(Product);
   const subRepo     = AppDataSource.getRepository(SubCategory);
@@ -111,24 +150,7 @@ export async function seedProducts(): Promise<void> {
   // ── Load all subcategories into lookup maps ───────────────────────
   const subCategories = await subRepo.find({ relations: ["category"] });
 
-  // Map: exact subcategory name → SubCategory
-  const bySubName = new Map<string, SubCategory>(
-    subCategories.map(s => [s.name.trim().toLowerCase(), s])
-  );
-
-  // Map: category name → first SubCategory of that category (fallback)
-  const byCatName = new Map<string, SubCategory>();
-  for (const s of subCategories) {
-    const catName = s.category?.name?.trim().toLowerCase();
-    if (catName && !byCatName.has(catName)) {
-      byCatName.set(catName, s);
-    }
-  }
-
-  // Map: numeric id → SubCategory
-  const byId = new Map<number, SubCategory>(
-    subCategories.map(s => [s.id, s])
-  );
+  const lookup = buildSubCategoryLookup(subCategories);
 
   // ── Build products to insert ──────────────────────────────────────
   const seen = new Set<string>();
@@ -144,19 +166,7 @@ export async function seedProducts(): Promise<void> {
       continue;
     }
 
-    // Resolve subcategory — try name first, then category fallback, then id
-    let subCategory: SubCategory | undefined;
-
-    const subName = (row.subCategoryName ?? "").trim().toLowerCase();
-    if (subName) {
-      subCategory = bySubName.get(subName) ?? byCatName.get(subName);
-    }
-
-    if (!subCategory && row.subCategoryId) {
-      const id = Number(row.subCategoryId);
-      if (!isNaN(id)) subCategory = byId.get(id);
-    }
-
+    const subCategory = resolveSubCategory(row, lookup);
     if (!subCategory) {
       console.log(`  ⚠ No subcategory found for: "${row.name}" (subCategoryName="${row.subCategoryName}")`);
       skipped++;
