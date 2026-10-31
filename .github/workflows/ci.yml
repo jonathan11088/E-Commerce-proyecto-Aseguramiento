@@ -38,7 +38,7 @@ jobs:
         run: npm run build
 
       - name: Pruebas unitarias con cobertura (Jest)
-        run: npm run test:coverage --if-present -- --ci
+        run: npm run test:coverage -- --ci
 
       - name: Publicar reporte de cobertura
         if: always()
