@@ -186,30 +186,28 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: produccion
-      url: https://e-commerce-frontend-bica.onrender.com
+      url: https://e-commerce-proyecto-aseguramiento-backend.onrender.com
     env:
-      BACKEND_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_BACKEND }}
-      FRONTEND_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_FRONTEND }}
-      BACKEND_URL: https://e-commerce-backend-2pn0.onrender.com
+      DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+      APP_URL: https://e-commerce-proyecto-aseguramiento-backend.onrender.com
     steps:
-      - name: Verificar secretos de despliegue
+      - name: Verificar secreto de despliegue
         run: |
-          if [ -z "$BACKEND_HOOK" ] || [ -z "$FRONTEND_HOOK" ]; then
-            echo "::error::Faltan los secretos RENDER_DEPLOY_HOOK_BACKEND y RENDER_DEPLOY_HOOK_FRONTEND"
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "::error::Falta el secreto RENDER_DEPLOY_HOOK"
             exit 1
           fi
 
-      - name: Desplegar backend en Render
-        run: curl -fsS -X POST "$BACKEND_HOOK"
+      # Un solo servicio en Render compila backend y frontend; Express sirve el build
+      # de Angular y la API desde el mismo origen.
+      - name: Desplegar en Render
+        run: curl -fsS -X POST "$DEPLOY_HOOK"
 
-      - name: Desplegar frontend en Render
-        run: curl -fsS -X POST "$FRONTEND_HOOK"
-
-      - name: Verificar que el backend desplegado responde
+      - name: Verificar que la aplicacion desplegada responde
         run: |
-          sleep 60
+          sleep 90
           for i in $(seq 1 30); do
-            if curl -sf "$BACKEND_URL/api/health"; then exit 0; fi
+            if curl -sf "$APP_URL/api/health"; then exit 0; fi
             echo "Esperando a Render ($i/30)..."
             sleep 20
           done
